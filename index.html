@@ -619,7 +619,8 @@
 
         if (response.ok) {
           const data = await response.json();
-          return { ok: true, status: elapsed > CONFIG.degradedThreshold ? 'slow' : 'up', latency: elapsed, php: data.php || null, httpStatus: response.status };
+          const phpVer = data?.services?.php || data?.php || null;
+          return { ok: true, status: elapsed > CONFIG.degradedThreshold ? 'slow' : 'up', latency: elapsed, php: phpVer, httpStatus: response.status };
         } else {
           return { ok: false, status: 'slow', latency: elapsed, php: null, httpStatus: response.status };
         }
