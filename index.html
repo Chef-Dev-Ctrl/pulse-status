@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse Status</title>
+  <meta name="description" content="Real-time status and incident history for Pulse by DVL Media" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <style>
+    :root {
+      --pulse-green: #39b54a;
+      --pulse-green-dark: #2d9340;
+      --bg-primary: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #263347;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #334155;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 0.75rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Status Banner */
+    .status-banner {
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .status-banner.operational {
+      background: linear-gradient(135deg, rgba(57, 181, 74, 0.15), rgba(57, 181, 74, 0.05));
+      border-color: rgba(57, 181, 74, 0.3);
+    }
+
+    .status-banner.degraded {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .status-banner.outage {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .status-banner.maintenance {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .status-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .status-banner.operational .status-title { color: var(--pulse-green); }
+    .status-banner.degraded .status-title { color: var(--amber); }
+    .status-banner.outage .status-title { color: var(--red); }
+    .status-banner.maintenance .status-title { color: var(--blue); }
+
+    .status-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Services Grid */
+    .services {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .service-list {
+      background: var(--bg-card);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .service-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .service-item:last-child { border-bottom: none; }
+
+    .service-name {
+      font-size: 0.9375rem;
+      font-weight: 500;
+    }
+
+    .service-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot.green { background: var(--pulse-green); box-shadow: 0 0 6px rgba(57, 181, 74, 0.5); }
+    .dot.amber { background: var(--amber); box-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
+    .dot.red { background: var(--red); box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+    .dot.blue { background: var(--blue); box-shadow: 0 0 6px rgba(59, 130, 246, 0.5); }
+
+    .status-text.green { color: var(--pulse-green); }
+    .status-text.amber { color: var(--amber); }
+    .status-text.red { color: var(--red); }
+    .status-text.blue { color: var(--blue); }
+
+    /* Incidents */
+    .incidents {
+      margin-bottom: 2rem;
+    }
+
+    .incident-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .incident-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .incident-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+    }
+
+    .incident-badge {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+
+    .incident-badge.resolved {
+      background: rgba(57, 181, 74, 0.15);
+      color: var(--pulse-green);
+    }
+
+    .incident-badge.investigating {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+    }
+
+    .incident-badge.identified {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
+    .incident-badge.monitoring {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--blue);
+    }
+
+    .incident-updates {
+      list-style: none;
+      border-left: 2px solid var(--border);
+      padding-left: 1rem;
+    }
+
+    .incident-update {
+      margin-bottom: 0.75rem;
+      position: relative;
+    }
+
+    .incident-update:last-child { margin-bottom: 0; }
+
+    .incident-update::before {
+      content: '';
+      position: absolute;
+      left: -1.3rem;
+      top: 0.45rem;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .incident-update:first-child::before {
+      background: var(--pulse-green);
+    }
+
+    .incident-update-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.125rem;
+    }
+
+    .incident-update-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.125rem;
+    }
+
+    .incident-update-text {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .no-incidents {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      padding: 2rem 1rem;
+      background: var(--bg-card);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* Live check */
+    .live-check {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .check-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .check-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .check-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .check-result {
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    /* Auto-poll indicator */
+    .auto-poll {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pulse-green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    .live-dot.checking {
+      background: var(--amber);
+    }
+
+    .live-dot.down {
+      background: var(--red);
+      animation: none;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .footer a {
+      color: var(--pulse-green);
+      text-decoration: none;
+    }
+
+    .footer a:hover { text-decoration: underline; }
+
+    .last-updated {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Animations */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .dot.green { animation: pulse-dot 2s ease-in-out infinite; }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .container { padding: 1.5rem 1rem; }
+      .header h1 { font-size: 1.25rem; }
+      .status-banner { padding: 1.25rem; }
+      .incident-header { flex-direction: column; gap: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <svg class="logo" viewBox="0 0 301.71 301.71" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#39b54a" d="M150.85,0C67.53,0,0,67.55,0,150.86c0,83.31,67.55,150.85,150.86,150.85,83.31,0,150.85-67.55,150.85-150.86C301.7,67.53,234.16,0,150.85,0ZM207.88,229.96c-29.33,0-44.02-38.6-57.03-79.11H25.22c22.87,0,36.79-79.11,68.6-79.11,29.33,0,44.02,38.6,57.03,79.11h125.63c-22.87,0-36.79,79.11-68.6,79.11Z"/>
+      </svg>
+      <h1>Pulse Status</h1>
+      <p>Heartbeat of Your Business</p>
+    </div>
+
+    <!-- Status Banner -->
+    <div id="status-banner" class="status-banner operational">
+      <div class="status-icon" id="status-icon">✓</div>
+      <div class="status-title" id="status-title">All Systems Operational</div>
+      <div class="status-subtitle" id="status-subtitle">Everything is running smoothly</div>
+    </div>
+
+    <!-- Services -->
+    <div class="services">
+      <div class="section-title">Services</div>
+      <div class="service-list" id="service-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Live Check -->
+    <div class="live-check">
+      <button class="check-btn" id="check-btn" onclick="runLiveCheck()">
+        ↻ Run Live Check
+      </button>
+      <div class="check-result" id="check-result"></div>
+      <div class="auto-poll" id="auto-poll">
+        <span class="live-dot" id="live-dot"></span>
+        <span id="poll-status">Auto-checking…</span>
+      </div>
+    </div>
+
+    <!-- Incidents -->
+    <div class="incidents">
+      <div class="section-title">Recent Incidents</div>
+      <div id="incidents-container">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Last Updated -->
+    <div class="last-updated" id="last-updated"></div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        <a href="https://usepulseapp.com">Pulse</a> · 
+        © <span id="year">2026</span> DVL Group (PTY) Ltd. All rights reserved.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // ── Configuration ──────────────────────────────────────────────
+    const CONFIG = {
+      healthEndpoint: 'https://usepulseapp.com/api/index.php?route=health',
+      siteUrl: 'https://usepulseapp.com',
+      checkTimeout: 8000,
+      pollInterval: 60000,       // Auto-check every 60 seconds
+      degradedThreshold: 3000,   // Response > 3s = degraded
+    };
+
+    // ── Live State (updated by auto-polling) ───────────────────────
+    let liveState = {
+      status: null,           // null = not yet checked, 'up', 'slow', 'down'
+      latency: null,
+      lastCheck: null,
+      consecutiveFailures: 0,
+      phpVersion: null,
+    };
+    let pollTimer = null;
+    let countdownTimer = null;
+
+    // ── Status Data ────────────────────────────────────────────────
+    // Edit this object to update the status page.
+    // For GitHub Pages: edit this file and push. Changes go live in ~1 min.
+    const STATUS_DATA = {
+      // Overall status: 'operational' | 'degraded' | 'outage' | 'maintenance'
+      overall: 'operational',
+      
+      // Optional override message (set to null for auto-generated)
+      overrideMessage: null,
+
+      // Last manual update time
+      lastUpdated: '2026-03-19T12:30:00+02:00',
+
+      // Individual service statuses
+      services: [
+        { name: 'Web Application',    status: 'operational' },
+        { name: 'API',                status: 'operational' },
+        { name: 'Database',           status: 'operational' },
+        { name: 'File Storage',       status: 'operational' },
+        { name: 'Push Notifications', status: 'operational' },
+        { name: 'Email Delivery',     status: 'operational' },
+      ],
+
+      // Incident history (newest first)
+      incidents: [
+        {
+          title: 'Production Outage — Xneelo Cache/Ingress Failure',
+          status: 'resolved',  // 'investigating' | 'identified' | 'monitoring' | 'resolved'
+          updates: [
+            {
+              time: '2026-03-19T13:00:00+02:00',
+              label: 'Resolved',
+              text: 'Xneelo has restored their cache/ingress service. All Pulse services are fully operational. No data was lost or compromised.',
+            },
+            {
+              time: '2026-03-19T12:20:00+02:00',
+              label: 'Identified',
+              text: 'Xneelo support confirmed the issue is with their cache/ingress proxy (limited release product). Their engineers are working on it as a matter of urgency.',
+            },
+            {
+              time: '2026-03-19T12:06:00+02:00',
+              label: 'Update',
+              text: 'Xneelo status page confirms: "Cache services are currently degraded, causing downtime for affected websites."',
+            },
+            {
+              time: '2026-03-19T11:50:00+02:00',
+              label: 'Investigating',
+              text: 'Production site unreachable. TLS handshake failing at Xneelo ingress proxy (160.115.0.2). Application server confirmed healthy via direct connection. Staging environment unaffected.',
+            },
+            {
+              time: '2026-03-19T11:24:00+02:00',
+              label: 'Detected',
+              text: 'Users unable to access usepulseapp.com. All API requests returning ERR_CONNECTION_CLOSED.',
+            },
+          ],
+        },
+      ],
+    };
+
+    // ── Rendering ──────────────────────────────────────────────────
+    const STATUS_CONFIG = {
+      operational:  { icon: '✓', title: 'All Systems Operational',   subtitle: 'Everything is running smoothly', dotClass: 'green', label: 'Operational' },
+      degraded:     { icon: '⚠', title: 'Degraded Performance',     subtitle: 'Some services may be slower than usual', dotClass: 'amber', label: 'Degraded' },
+      outage:       { icon: '✕', title: 'Major Outage',             subtitle: 'We\'re aware and working on it', dotClass: 'red', label: 'Down' },
+      maintenance:  { icon: '⚙', title: 'Scheduled Maintenance',    subtitle: 'We\'ll be back shortly', dotClass: 'blue', label: 'Maintenance' },
+    };
+
+    function render() {
+      const data = STATUS_DATA;
+      const cfg = STATUS_CONFIG[data.overall] || STATUS_CONFIG.operational;
+
+      // Banner
+      const banner = document.getElementById('status-banner');
+      banner.className = `status-banner ${data.overall}`;
+      document.getElementById('status-icon').textContent = cfg.icon;
+      document.getElementById('status-title').textContent = data.overrideMessage || cfg.title;
+      document.getElementById('status-subtitle').textContent = cfg.subtitle;
+
+      // Services
+      const serviceList = document.getElementById('service-list');
+      serviceList.innerHTML = data.services.map(s => {
+        const sc = STATUS_CONFIG[s.status] || STATUS_CONFIG.operational;
+        return `
+          <div class="service-item">
+            <span class="service-name">${s.name}</span>
+            <span class="service-status">
+              <span class="status-text ${sc.dotClass}">${sc.label}</span>
+              <span class="dot ${sc.dotClass}"></span>
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      // Incidents
+      const container = document.getElementById('incidents-container');
+      if (!data.incidents || data.incidents.length === 0) {
+        container.innerHTML = '<div class="no-incidents">No incidents reported in the last 30 days 🎉</div>';
+      } else {
+        container.innerHTML = data.incidents.map(inc => `
+          <div class="incident-card">
+            <div class="incident-header">
+              <span class="incident-title">${inc.title}</span>
+              <span class="incident-badge ${inc.status}">${inc.status}</span>
+            </div>
+            <ul class="incident-updates">
+              ${inc.updates.map(u => `
+                <li class="incident-update">
+                  <div class="incident-update-time">${formatTime(u.time)}</div>
+                  <div class="incident-update-label">${u.label}</div>
+                  <div class="incident-update-text">${u.text}</div>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+
+      // Last updated
+      document.getElementById('last-updated').textContent =
+        `Last updated: ${formatTime(data.lastUpdated)}`;
+
+      // Year
+      document.getElementById('year').textContent = new Date().getFullYear();
+    }
+
+    function formatTime(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString('en-ZA', {
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+        });
+      } catch { return iso; }
+    }
+
+    // ── Health Check (shared by manual & auto) ────────────────────
+    async function checkHealth() {
+      const start = Date.now();
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), CONFIG.checkTimeout);
+
+        const response = await fetch(CONFIG.healthEndpoint, {
+          method: 'GET',
+          signal: controller.signal,
+          mode: 'cors',
+          cache: 'no-store',
+        });
+
+        clearTimeout(timeout);
+        const elapsed = Date.now() - start;
+
+        if (response.ok) {
+          const data = await response.json();
+          return { ok: true, status: elapsed > CONFIG.degradedThreshold ? 'slow' : 'up', latency: elapsed, php: data.php || null, httpStatus: response.status };
+        } else {
+          return { ok: false, status: 'slow', latency: elapsed, php: null, httpStatus: response.status };
+        }
+      } catch (e) {
+        const elapsed = Date.now() - start;
+        return { ok: false, status: 'down', latency: elapsed, php: null, error: e.name === 'AbortError' ? 'timeout' : e.message };
+      }
+    }
+
+    // ── Manual Live Check ──────────────────────────────────────────
+    async function runLiveCheck() {
+      const btn = document.getElementById('check-btn');
+      const result = document.getElementById('check-result');
+      btn.disabled = true;
+      btn.textContent = '↻ Checking…';
+      result.textContent = '';
+
+      const r = await checkHealth();
+
+      if (r.ok && r.status === 'up') {
+        result.innerHTML = `<span style="color: var(--pulse-green)">✓ API responding</span> · ${r.latency}ms${r.php ? ' · PHP ' + r.php : ''}`;
+      } else if (r.ok && r.status === 'slow') {
+        result.innerHTML = `<span style="color: var(--amber)">⚠ API slow</span> · ${r.latency}ms${r.php ? ' · PHP ' + r.php : ''}`;
+      } else if (r.httpStatus) {
+        result.innerHTML = `<span style="color: var(--amber)">⚠ API returned ${r.httpStatus}</span> · ${r.latency}ms`;
+      } else if (r.error === 'timeout') {
+        result.innerHTML = `<span style="color: var(--red)">✕ Request timed out</span> · ${r.latency}ms`;
+      } else {
+        result.innerHTML = `<span style="color: var(--red)">✕ Cannot reach API</span> · ${r.error}`;
+      }
+
+      // Also update live state
+      updateLiveState(r);
+
+      btn.disabled = false;
+      btn.textContent = '↻ Run Live Check';
+
+      // Reset auto-poll countdown
+      startCountdown();
+    }
+
+    // ── Auto-Poll Logic ────────────────────────────────────────────
+    function updateLiveState(r) {
+      liveState.lastCheck = new Date();
+      liveState.latency = r.latency;
+      liveState.phpVersion = r.php || liveState.phpVersion;
+
+      if (r.ok && r.status === 'up') {
+        liveState.status = 'up';
+        liveState.consecutiveFailures = 0;
+      } else if (r.status === 'slow') {
+        liveState.status = 'slow';
+        liveState.consecutiveFailures = 0;
+      } else {
+        liveState.consecutiveFailures++;
+        liveState.status = 'down';
+      }
+
+      applyLiveOverrides();
+      updatePollUI();
+    }
+
+    function applyLiveOverrides() {
+      // If STATUS_DATA says maintenance, don't override — manual takes priority
+      if (STATUS_DATA.overall === 'maintenance') return;
+
+      const banner = document.getElementById('status-banner');
+      const titleEl = document.getElementById('status-title');
+      const subtitleEl = document.getElementById('status-subtitle');
+      const iconEl = document.getElementById('status-icon');
+
+      // Determine effective status from live + manual data
+      let effective;
+      if (liveState.status === 'down' && liveState.consecutiveFailures >= 2) {
+        effective = 'outage';
+      } else if (liveState.status === 'slow') {
+        effective = 'degraded';
+      } else if (liveState.status === 'up') {
+        // If manual says outage but API is up, show operational
+        effective = STATUS_DATA.overall === 'outage' ? 'operational' : STATUS_DATA.overall;
+      } else {
+        effective = STATUS_DATA.overall;
+      }
+
+      const cfg = STATUS_CONFIG[effective] || STATUS_CONFIG.operational;
+      banner.className = `status-banner ${effective}`;
+      iconEl.textContent = cfg.icon;
+      titleEl.textContent = STATUS_DATA.overrideMessage || cfg.title;
+      subtitleEl.textContent = cfg.subtitle;
+
+      // Update Web Application & API service rows based on live state
+      const serviceMap = { up: 'operational', slow: 'degraded', down: 'outage' };
+      const liveServiceStatus = serviceMap[liveState.status] || 'operational';
+      const rows = document.querySelectorAll('.service-item');
+      rows.forEach(row => {
+        const name = row.querySelector('.service-name')?.textContent;
+        if (name === 'Web Application' || name === 'API') {
+          const sc = STATUS_CONFIG[liveServiceStatus];
+          const statusEl = row.querySelector('.service-status');
+          statusEl.innerHTML = `
+            <span class="status-text ${sc.dotClass}">${sc.label}</span>
+            <span class="dot ${sc.dotClass}"></span>
+          `;
+        }
+      });
+    }
+
+    function updatePollUI() {
+      const liveDot = document.getElementById('live-dot');
+      const pollStatus = document.getElementById('poll-status');
+
+      if (liveState.status === 'up') {
+        liveDot.className = 'live-dot';
+        pollStatus.innerHTML = `Live · ${liveState.latency}ms · <span id="countdown"></span>`;
+      } else if (liveState.status === 'slow') {
+        liveDot.className = 'live-dot checking';
+        pollStatus.innerHTML = `Slow (${liveState.latency}ms) · <span id="countdown"></span>`;
+      } else if (liveState.status === 'down') {
+        liveDot.className = 'live-dot down';
+        pollStatus.innerHTML = `Unreachable · ${liveState.consecutiveFailures} consecutive failure${liveState.consecutiveFailures > 1 ? 's' : ''} · <span id="countdown"></span>`;
+      }
+    }
+
+    async function autoPoll() {
+      const liveDot = document.getElementById('live-dot');
+      liveDot.className = 'live-dot checking';
+
+      const r = await checkHealth();
+      updateLiveState(r);
+      startCountdown();
+    }
+
+    function startCountdown() {
+      clearInterval(countdownTimer);
+      clearTimeout(pollTimer);
+
+      let remaining = Math.round(CONFIG.pollInterval / 1000);
+      const cdEl = () => document.getElementById('countdown');
+
+      if (cdEl()) cdEl().textContent = `next check in ${remaining}s`;
+
+      countdownTimer = setInterval(() => {
+        remaining--;
+        if (cdEl()) cdEl().textContent = `next check in ${remaining}s`;
+        if (remaining <= 0) clearInterval(countdownTimer);
+      }, 1000);
+
+      pollTimer = setTimeout(autoPoll, CONFIG.pollInterval);
+    }
+
+    // ── Init ───────────────────────────────────────────────────────
+    render();
+
+    // Start auto-polling immediately on load
+    (async () => {
+      await autoPoll();
+    })();
+  </script>
+</body>
+</html>
