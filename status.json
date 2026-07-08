@@ -1,32 +1,176 @@
 {
-  "version": 1,
-  "generated_at": "2026-07-08T00:00:00+00:00",
-  "overall": "unknown",
-  "source": "status-page-seed",
-  "stale_after_seconds": 60,
-  "watchpoints": [
-    {
-      "key": "core_web",
-      "label": "Core Web",
-      "status": "unknown",
-      "group": "product",
-      "message": "Awaiting monitor data"
-    },
-    {
-      "key": "api",
-      "label": "API",
-      "status": "unknown",
-      "group": "product",
-      "message": "Awaiting monitor data"
-    }
-  ],
-  "incidents": [],
   "external_checks": [
     {
-      "key": "pi_checker",
-      "label": "External Checker",
-      "status": "unknown",
-      "message": "Awaiting Pi heartbeat"
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "content_type": "text/html",
+      "key": "public_web",
+      "label": "Public Web",
+      "latency_ms": 167,
+      "message": "HTTP 200",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "content_type": "application/json",
+      "key": "api_health",
+      "label": "API Health",
+      "latency_ms": 43,
+      "message": "HTTP 200",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "content_type": "text/html",
+      "key": "status_page",
+      "label": "Status Page",
+      "latency_ms": 37,
+      "message": "HTTP 200",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "key": "tls_usepulseapp",
+      "label": "TLS usepulseapp.com",
+      "latency_ms": 113,
+      "message": "Expires in 43 days",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "key": "tls_status_page",
+      "label": "TLS status.usepulseapp.com",
+      "latency_ms": 115,
+      "message": "Expires in 39 days",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "content_type": "application/json",
+      "key": "public_status_json",
+      "label": "Public Status JSON",
+      "latency_ms": 46,
+      "message": "HTTP 200",
+      "status": "operational"
+    }
+  ],
+  "generated_at": "2026-07-08T15:16:30+00:00",
+  "incidents": [],
+  "overall": "operational",
+  "source": "goblin-king-pi",
+  "stale_after_seconds": 420,
+  "version": 1,
+  "watchpoints": [
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "core_web",
+      "label": "Core Web",
+      "message": "External probe",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "api",
+      "label": "API",
+      "message": "External probe",
+      "status": "operational"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "auth",
+      "label": "Auth",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "payments",
+      "label": "Payments",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "chat",
+      "label": "Chat",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "file_uploads",
+      "label": "File Uploads",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "inventory",
+      "label": "Inventory",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "tickets",
+      "label": "Tickets",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "forms",
+      "label": "Forms",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "projects",
+      "label": "Projects",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "leads",
+      "label": "Leads",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "calendar",
+      "label": "Calendar",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "reports",
+      "label": "Reports",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
+    },
+    {
+      "checked_at": "2026-07-08T15:16:30+00:00",
+      "group": "product",
+      "key": "notifications",
+      "label": "Notifications",
+      "message": "Awaiting app-flow data",
+      "status": "unknown"
     }
   ]
 }
