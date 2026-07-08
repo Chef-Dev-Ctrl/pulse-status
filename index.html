@@ -307,12 +307,15 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      flex-wrap: wrap;
       min-width: 0;
     }
 
     .name {
       font-weight: 720;
-      overflow-wrap: anywhere;
+      min-width: 0;
+      overflow-wrap: normal;
+      word-break: normal;
     }
 
     .badge {
@@ -324,6 +327,7 @@
       color: #00140a;
       background: var(--ok);
       white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .badge.degraded {
@@ -356,8 +360,12 @@
 
     .overview-grid {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
       gap: 12px;
+    }
+
+    .overview-grid > .grid {
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
     }
 
     .timeline {
@@ -456,6 +464,10 @@
       .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+
+      .overview-grid > .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 640px) {
@@ -489,6 +501,10 @@
 
       .meta-grid,
       .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .overview-grid > .grid {
         grid-template-columns: 1fr;
       }
 
@@ -636,18 +652,7 @@
         { key: 'reports', label: 'Reports', status: 'unknown', group: 'product', message: 'Not currently monitored' },
         { key: 'notifications', label: 'Notifications', status: 'unknown', group: 'product', message: 'Not currently monitored' },
       ],
-      incidents: [
-        {
-          title: 'Production outage - upstream ingress failure',
-          status: 'resolved',
-          started_at: '2026-03-19T11:24:00+02:00',
-          resolved_at: '2026-03-19T13:00:00+02:00',
-          updates: [
-            { time: '2026-03-19T13:00:00+02:00', label: 'Resolved', text: 'Upstream ingress service was restored and Pulse returned to normal operation.' },
-            { time: '2026-03-19T11:24:00+02:00', label: 'Detected', text: 'Users were unable to access the production site. No Pulse data was lost.' },
-          ],
-        },
-      ],
+      incidents: [],
       external_checks: [],
     };
 
@@ -687,23 +692,48 @@
 
     async function loadStatus() {
       let staleCandidate = null;
-      const primary = await fetchJson(CONFIG.publicStatusEndpoint, 'vps-public-status');
+      const [primary, fallback] = await Promise.all([
+        fetchJson(CONFIG.publicStatusEndpoint, 'vps-public-status'),
+        fetchJson(`${CONFIG.sameOriginFallback}?t=${Date.now()}`, 'pi-status-json'),
+      ]);
+
+      let primaryStatus = null;
+      let fallbackStatus = null;
       if (primary) {
-        const normalized = normalizeStatus(primary.data, primary.source);
-        if (!isStale(normalized)) return normalized;
-        staleCandidate = normalized;
+        primaryStatus = normalizeStatus(primary.data, primary.source);
+        if (!isStale(primaryStatus)) {
+          if (fallback) {
+            fallbackStatus = normalizeStatus(fallback.data, fallback.source);
+            if (!isStale(fallbackStatus)) return mergeStatus(primaryStatus, fallbackStatus);
+            staleCandidate = fallbackStatus;
+          }
+          return primaryStatus;
+        }
+        staleCandidate = primaryStatus;
       }
 
-      const fallback = await fetchJson(`${CONFIG.sameOriginFallback}?t=${Date.now()}`, 'pi-status-json');
       if (fallback) {
-        const normalized = normalizeStatus(fallback.data, fallback.source);
-        if (!isStale(normalized)) return normalized;
-        staleCandidate = staleCandidate || normalized;
+        fallbackStatus = fallbackStatus || normalizeStatus(fallback.data, fallback.source);
+        if (!isStale(fallbackStatus)) return fallbackStatus;
+        staleCandidate = staleCandidate || fallbackStatus;
       }
 
       const live = await liveHealthFallback();
       const liveStatus = normalizeStatus(live, 'browser-health-check');
       return isStale(liveStatus) && staleCandidate ? staleCandidate : liveStatus;
+    }
+
+    function mergeStatus(primary, secondary) {
+      const externalChecks = secondary.external_checks.length ? secondary.external_checks : primary.external_checks;
+      const incidents = primary.incidents.length ? primary.incidents : secondary.incidents;
+      return {
+        ...primary,
+        generated_at: latestTime(primary.generated_at, secondary.generated_at),
+        overall: mergeOverall(primary.overall, externalChecks),
+        incidents,
+        external_checks: externalChecks,
+        loaded_from: externalChecks.length ? 'vps-public-status + pi-status-json' : primary.loaded_from,
+      };
     }
 
     async function fetchJson(url, source) {
@@ -859,6 +889,25 @@
         return;
       }
       target.replaceChildren(...checks.map(watchpointCard));
+    }
+
+    function mergeOverall(primaryOverall, externalChecks) {
+      const states = [normalizeState(primaryOverall), ...externalChecks.map((item) => normalizeState(item.status))];
+      if (states.includes('outage')) return 'outage';
+      if (states.includes('degraded')) return 'degraded';
+      if (states.includes('maintenance')) return 'maintenance';
+      if (states.some((state) => state === 'operational')) return 'operational';
+      return 'unknown';
+    }
+
+    function latestTime(first, second) {
+      const firstDate = new Date(first);
+      const secondDate = new Date(second);
+      const firstMs = firstDate.getTime();
+      const secondMs = secondDate.getTime();
+      if (!Number.isFinite(firstMs)) return validTime(second) || new Date().toISOString();
+      if (!Number.isFinite(secondMs)) return validTime(first) || new Date().toISOString();
+      return new Date(Math.max(firstMs, secondMs)).toISOString();
     }
 
     function watchpointCard(item) {
