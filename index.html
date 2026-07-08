@@ -4,780 +4,971 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pulse Status</title>
-  <meta name="description" content="Real-time status and incident history for Pulse by Pulse Labs (Pty) Ltd" />
+  <meta name="description" content="Current availability status for Pulse." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <style>
     :root {
-      --pulse-green: #39b54a;
-      --pulse-green-dark: #2d9340;
-      --bg-primary: #0f172a;
-      --bg-card: #1e293b;
-      --bg-card-hover: #263347;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --border: #334155;
-      --red: #ef4444;
-      --amber: #f59e0b;
-      --blue: #3b82f6;
+      --bg: #0a0a0a;
+      --surface: #1a1a1a;
+      --surface-soft: #2a2a2a;
+      --brand: #00ff88;
+      --text: #f6f7f8;
+      --muted: #9aa0a6;
+      --border: rgba(255, 255, 255, 0.12);
+      --ok: #00ff88;
+      --warn: #ffcc66;
+      --bad: #ff5b6e;
+      --info: #7ab7ff;
+      --unknown: #aab0b8;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      margin: 0;
       min-height: 100vh;
-      line-height: 1.6;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
     }
 
-    .container {
-      max-width: 720px;
+    button {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 2rem 1.5rem;
+      padding: 28px 0 32px;
     }
 
-    /* Header */
-    .header {
-      text-align: center;
-      margin-bottom: 2.5rem;
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
     }
 
     .logo {
-      width: 56px;
-      height: 56px;
-      margin-bottom: 0.75rem;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
     }
 
-    .header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.025em;
+    .brand-title {
+      margin: 0;
+      font-size: 1.18rem;
+      line-height: 1.1;
+      font-weight: 750;
     }
 
-    .header p {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
     }
 
-    /* Status Banner */
-    .status-banner {
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      margin-bottom: 2rem;
-      border: 1px solid transparent;
-      transition: all 0.3s ease;
+    .refresh-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .status-banner.operational {
-      background: linear-gradient(135deg, rgba(57, 181, 74, 0.15), rgba(57, 181, 74, 0.05));
-      border-color: rgba(57, 181, 74, 0.3);
+    .source-pill,
+    .refresh-button {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      white-space: nowrap;
     }
 
-    .status-banner.degraded {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
-      border-color: rgba(245, 158, 11, 0.3);
+    .refresh-button {
+      color: var(--text);
+      cursor: pointer;
     }
 
-    .status-banner.outage {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
-      border-color: rgba(239, 68, 68, 0.3);
+    .refresh-button:hover,
+    .refresh-button:focus-visible {
+      border-color: rgba(0, 255, 136, 0.5);
+      outline: none;
     }
 
-    .status-banner.maintenance {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
-      border-color: rgba(59, 130, 246, 0.3);
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
     }
 
-    .status-icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+    .status-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      min-height: 216px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 22px;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .status-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      font-weight: 800;
+      color: var(--ok);
+      flex: 0 0 auto;
+    }
+
+    .status-mark.degraded {
+      color: var(--warn);
+    }
+
+    .status-mark.outage {
+      color: var(--bad);
+    }
+
+    .status-mark.maintenance {
+      color: var(--info);
+    }
+
+    .status-mark.unknown {
+      color: var(--unknown);
     }
 
     .status-title {
-      font-size: 1.25rem;
-      font-weight: 600;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: 0;
     }
 
-    .status-banner.operational .status-title { color: var(--pulse-green); }
-    .status-banner.degraded .status-title { color: var(--amber); }
-    .status-banner.outage .status-title { color: var(--red); }
-    .status-banner.maintenance .status-title { color: var(--blue); }
-
-    .status-subtitle {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
+    .status-copy {
+      margin: 10px 0 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 1rem;
     }
 
-    /* Services Grid */
-    .services {
-      margin-bottom: 2rem;
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
 
-    .section-title {
-      font-size: 0.75rem;
-      font-weight: 600;
+    .meta-item {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 0.74rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 0.75rem;
+      letter-spacing: 0.08em;
     }
 
-    .service-list {
-      background: var(--bg-card);
-      border-radius: 10px;
+    .meta-value {
+      margin-top: 3px;
+      font-size: 0.92rem;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .snapshot {
       border: 1px solid var(--border);
-      overflow: hidden;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 216px;
+      display: grid;
+      gap: 12px;
     }
 
-    .service-item {
+    .snapshot-row {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 0.875rem 1.25rem;
+      gap: 14px;
+      align-items: center;
       border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
     }
 
-    .service-item:last-child { border-bottom: none; }
-
-    .service-name {
-      font-size: 0.9375rem;
-      font-weight: 500;
+    .snapshot-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
     }
 
-    .service-status {
+    .snapshot-label {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .snapshot-value {
+      font-weight: 750;
+      text-align: right;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 14px;
+      scrollbar-width: thin;
+    }
+
+    .tab {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 10px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #00140a;
+      font-weight: 800;
+    }
+
+    .tab:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 14px;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-title {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8125rem;
-      font-weight: 500;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .dot.green { background: var(--pulse-green); box-shadow: 0 0 6px rgba(57, 181, 74, 0.5); }
-    .dot.amber { background: var(--amber); box-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
-    .dot.red { background: var(--red); box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
-    .dot.blue { background: var(--blue); box-shadow: 0 0 6px rgba(59, 130, 246, 0.5); }
-
-    .status-text.green { color: var(--pulse-green); }
-    .status-text.amber { color: var(--amber); }
-    .status-text.red { color: var(--red); }
-    .status-text.blue { color: var(--blue); }
-
-    /* Incidents */
-    .incidents {
-      margin-bottom: 2rem;
-    }
-
-    .incident-card {
-      background: var(--bg-card);
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      padding: 1.25rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .incident-header {
-      display: flex;
-      align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 0.75rem;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .name {
+      font-weight: 720;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #00140a;
+      background: var(--ok);
+      white-space: nowrap;
+    }
+
+    .badge.degraded {
+      background: var(--warn);
+      color: #1f1200;
+    }
+
+    .badge.outage {
+      background: var(--bad);
+      color: #210006;
+    }
+
+    .badge.maintenance {
+      background: var(--info);
+      color: #00101f;
+    }
+
+    .badge.unknown {
+      background: var(--surface-soft);
+      color: var(--unknown);
+      border: 1px solid var(--border);
+    }
+
+    .card-meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 12px;
+    }
+
+    .timeline {
+      border-left: 1px solid var(--border);
+      padding-left: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .incident {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 14px;
+    }
+
+    .incident::before {
+      content: "";
+      position: absolute;
+      left: -21px;
+      top: 18px;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--brand);
+    }
+
+    .incident-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 10px;
     }
 
     .incident-title {
-      font-size: 0.9375rem;
-      font-weight: 600;
+      font-weight: 760;
     }
 
-    .incident-badge {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      padding: 0.2rem 0.6rem;
-      border-radius: 999px;
+    .incident-time,
+    .empty {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .updates {
+      display: grid;
+      gap: 10px;
+    }
+
+    .update-label {
+      font-size: 0.76rem;
+      color: var(--brand);
       text-transform: uppercase;
-      letter-spacing: 0.03em;
-      flex-shrink: 0;
+      font-weight: 800;
+      letter-spacing: 0.07em;
     }
 
-    .incident-badge.resolved {
-      background: rgba(57, 181, 74, 0.15);
-      color: var(--pulse-green);
+    .update-text {
+      color: var(--muted);
+      margin-top: 2px;
     }
 
-    .incident-badge.investigating {
-      background: rgba(245, 158, 11, 0.15);
-      color: var(--amber);
-    }
-
-    .incident-badge.identified {
-      background: rgba(239, 68, 68, 0.15);
-      color: var(--red);
-    }
-
-    .incident-badge.monitoring {
-      background: rgba(59, 130, 246, 0.15);
-      color: var(--blue);
-    }
-
-    .incident-updates {
-      list-style: none;
-      border-left: 2px solid var(--border);
-      padding-left: 1rem;
-    }
-
-    .incident-update {
-      margin-bottom: 0.75rem;
-      position: relative;
-    }
-
-    .incident-update:last-child { margin-bottom: 0; }
-
-    .incident-update::before {
-      content: '';
-      position: absolute;
-      left: -1.3rem;
-      top: 0.45rem;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--border);
-    }
-
-    .incident-update:first-child::before {
-      background: var(--pulse-green);
-    }
-
-    .incident-update-time {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 0.125rem;
-    }
-
-    .incident-update-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-bottom: 0.125rem;
-    }
-
-    .incident-update-text {
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-    }
-
-    .no-incidents {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      padding: 2rem 1rem;
-      background: var(--bg-card);
-      border-radius: 10px;
+    .empty {
       border: 1px solid var(--border);
-    }
-
-    /* Live check */
-    .live-check {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .check-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 0.5rem 1.25rem;
       border-radius: 8px;
-      font-size: 0.8125rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .check-btn:hover {
-      background: var(--bg-card-hover);
-      color: var(--text-primary);
-    }
-
-    .check-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .check-result {
-      margin-top: 0.5rem;
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-    }
-
-    /* Auto-poll indicator */
-    .auto-poll {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--pulse-green);
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    .live-dot.checking {
-      background: var(--amber);
-    }
-
-    .live-dot.down {
-      background: var(--red);
-      animation: none;
-    }
-
-    /* Footer */
-    .footer {
+      background: var(--surface);
+      padding: 22px;
       text-align: center;
-      padding-top: 1.5rem;
+    }
+
+    .footer {
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
       border-top: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 0.75rem;
+      padding-top: 18px;
+      margin-top: 28px;
+      font-size: 0.84rem;
     }
 
     .footer a {
-      color: var(--pulse-green);
+      color: var(--brand);
       text-decoration: none;
     }
 
-    .footer a:hover { text-decoration: underline; }
+    @media (max-width: 980px) {
+      .hero,
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
 
-    .last-updated {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: center;
-      margin-bottom: 1.5rem;
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
-    /* Animations */
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+    @media (max-width: 640px) {
+      .shell {
+        width: min(100% - 24px, 1180px);
+        padding-top: 18px;
+      }
 
-    .dot.green { animation: pulse-dot 2s ease-in-out infinite; }
+      .topbar,
+      .status-main,
+      .snapshot-row {
+        align-items: flex-start;
+      }
 
-    /* Mobile */
-    @media (max-width: 480px) {
-      .container { padding: 1.5rem 1rem; }
-      .header h1 { font-size: 1.25rem; }
-      .status-banner { padding: 1.25rem; }
-      .incident-header { flex-direction: column; gap: 0.5rem; }
+      .topbar {
+        flex-direction: column;
+      }
+
+      .refresh-row {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .status-panel {
+        padding: 18px;
+      }
+
+      .status-main {
+        flex-direction: column;
+      }
+
+      .meta-grid,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .snapshot-row {
+        flex-direction: column;
+      }
+
+      .snapshot-value {
+        text-align: left;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <svg class="logo" viewBox="0 0 301.71 301.71" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#39b54a" d="M150.85,0C67.53,0,0,67.55,0,150.86c0,83.31,67.55,150.85,150.86,150.85,83.31,0,150.85-67.55,150.85-150.86C301.7,67.53,234.16,0,150.85,0ZM207.88,229.96c-29.33,0-44.02-38.6-57.03-79.11H25.22c22.87,0,36.79-79.11,68.6-79.11,29.33,0,44.02,38.6,57.03,79.11h125.63c-22.87,0-36.79,79.11-68.6,79.11Z"/>
-      </svg>
-      <h1>Pulse Status</h1>
-      <p>Heartbeat of Your Business</p>
-    </div>
-
-    <!-- Status Banner -->
-    <div id="status-banner" class="status-banner operational">
-      <div class="status-icon" id="status-icon">✓</div>
-      <div class="status-title" id="status-title">All Systems Operational</div>
-      <div class="status-subtitle" id="status-subtitle">Everything is running smoothly</div>
-    </div>
-
-    <!-- Services -->
-    <div class="services">
-      <div class="section-title">Services</div>
-      <div class="service-list" id="service-list">
-        <!-- Populated by JS -->
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 301.71 301.71" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="#00ff88" d="M150.85,0C67.53,0,0,67.55,0,150.86c0,83.31,67.55,150.85,150.86,150.85,83.31,0,150.85-67.55,150.85-150.86C301.7,67.53,234.16,0,150.85,0ZM207.88,229.96c-29.33,0-44.02-38.6-57.03-79.11H25.22c22.87,0,36.79-79.11,68.6-79.11,29.33,0,44.02,38.6,57.03,79.11h125.63c-22.87,0-36.79,79.11-68.6,79.11Z"/>
+        </svg>
+        <div>
+          <h1 class="brand-title">Pulse Status</h1>
+          <p class="brand-subtitle">Current availability across Pulse workspaces</p>
+        </div>
       </div>
-    </div>
-
-    <!-- Live Check -->
-    <div class="live-check">
-      <button class="check-btn" id="check-btn" onclick="runLiveCheck()">
-        ↻ Run Live Check
-      </button>
-      <div class="check-result" id="check-result"></div>
-      <div class="auto-poll" id="auto-poll">
-        <span class="live-dot" id="live-dot"></span>
-        <span id="poll-status">Auto-checking…</span>
+      <div class="refresh-row">
+        <span class="source-pill" id="source-pill">Source: loading</span>
+        <button class="refresh-button" id="refresh-button" type="button">Refresh</button>
       </div>
-    </div>
+    </header>
 
-    <!-- Incidents -->
-    <div class="incidents">
-      <div class="section-title">Recent Incidents</div>
-      <div id="incidents-container">
-        <!-- Populated by JS -->
+    <section class="hero" aria-label="Current status">
+      <div class="status-panel">
+        <div class="status-main">
+          <div class="status-mark operational" id="status-mark">OK</div>
+          <div>
+            <h2 class="status-title" id="status-title">Checking Pulse</h2>
+            <p class="status-copy" id="status-copy">Loading the latest monitoring snapshot.</p>
+          </div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="meta-label">Generated</div>
+            <div class="meta-value" id="generated-at">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Freshness</div>
+            <div class="meta-value" id="freshness">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Watchpoints</div>
+            <div class="meta-value" id="watchpoint-count">--</div>
+          </div>
+        </div>
       </div>
-    </div>
+      <aside class="snapshot" aria-label="Snapshot">
+        <div class="snapshot-row">
+          <span class="snapshot-label">Operational</span>
+          <span class="snapshot-value" id="count-operational">0</span>
+        </div>
+        <div class="snapshot-row">
+          <span class="snapshot-label">Needs attention</span>
+          <span class="snapshot-value" id="count-attention">0</span>
+        </div>
+        <div class="snapshot-row">
+          <span class="snapshot-label">Unknown</span>
+          <span class="snapshot-value" id="count-unknown">0</span>
+        </div>
+        <div class="snapshot-row">
+          <span class="snapshot-label">External checks</span>
+          <span class="snapshot-value" id="count-external">0</span>
+        </div>
+      </aside>
+    </section>
 
-    <!-- Last Updated -->
-    <div class="last-updated" id="last-updated"></div>
+    <nav class="tabs" aria-label="Status sections">
+      <button class="tab" type="button" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="tab" type="button" data-tab="watchpoints" aria-selected="false">Watchpoints</button>
+      <button class="tab" type="button" data-tab="incidents" aria-selected="false">Incidents</button>
+      <button class="tab" type="button" data-tab="external" aria-selected="false">External Checks</button>
+    </nav>
 
-    <!-- Footer -->
-    <div class="footer">
-      <p>
-        <a href="https://usepulseapp.com">Pulse</a> · 
-        © <span id="year">2026</span> Pulse Labs (Pty) Ltd. All rights reserved.
-      </p>
-    </div>
-  </div>
+    <section class="tab-panel active" id="panel-overview" aria-label="Overview">
+      <div class="overview-grid">
+        <div class="grid" id="overview-grid"></div>
+        <div id="overview-incidents"></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="panel-watchpoints" aria-label="Watchpoints">
+      <div class="grid" id="watchpoints-grid"></div>
+    </section>
+
+    <section class="tab-panel" id="panel-incidents" aria-label="Incidents">
+      <div class="timeline" id="incidents-list"></div>
+    </section>
+
+    <section class="tab-panel" id="panel-external" aria-label="External checks">
+      <div class="grid" id="external-grid"></div>
+    </section>
+
+    <footer class="footer">
+      <span>Pulse Labs (Pty) Ltd</span>
+      <a href="https://usepulseapp.com">usepulseapp.com</a>
+    </footer>
+  </main>
 
   <script>
-    // ── Configuration ──────────────────────────────────────────────
     const CONFIG = {
+      publicStatusEndpoint: 'https://usepulseapp.com/api/index.php?route=status/public',
+      sameOriginFallback: 'status.json',
       healthEndpoint: 'https://usepulseapp.com/api/index.php?route=health',
-      siteUrl: 'https://usepulseapp.com',
-      checkTimeout: 8000,
-      pollInterval: 60000,       // Auto-check every 60 seconds
-      degradedThreshold: 3000,   // Response > 3s = degraded
+      timeoutMs: 8000,
+      refreshMs: 60000,
+      slowMs: 3000,
     };
 
-    // ── Live State (updated by auto-polling) ───────────────────────
-    let liveState = {
-      status: null,           // null = not yet checked, 'up', 'slow', 'down'
-      latency: null,
-      lastCheck: null,
-      consecutiveFailures: 0,
-      phpVersion: null,
+    const STATUS_META = {
+      operational: { title: 'All Systems Operational', copy: 'Pulse is available and running normally.', mark: 'OK', badge: 'Operational' },
+      degraded: { title: 'Degraded Performance', copy: 'Some Pulse areas may be slower or partially unavailable.', mark: '!', badge: 'Degraded' },
+      outage: { title: 'Service Outage', copy: 'One or more Pulse areas are currently unavailable.', mark: 'X', badge: 'Outage' },
+      maintenance: { title: 'Scheduled Maintenance', copy: 'Maintenance is in progress on one or more Pulse areas.', mark: 'MT', badge: 'Maintenance' },
+      unknown: { title: 'Status Unknown', copy: 'The latest monitoring snapshot is not available yet.', mark: '--', badge: 'Unknown' },
     };
-    let pollTimer = null;
-    let countdownTimer = null;
 
-    // ── Status Data ────────────────────────────────────────────────
-    // Edit this object to update the status page.
-    // For GitHub Pages: edit this file and push. Changes go live in ~1 min.
-    const STATUS_DATA = {
-      // Overall status: 'operational' | 'degraded' | 'outage' | 'maintenance'
+    const FALLBACK_STATUS = {
+      version: 1,
+      generated_at: '2026-03-19T13:00:00+02:00',
       overall: 'operational',
-      
-      // Optional override message (set to null for auto-generated)
-      overrideMessage: null,
-
-      // Last manual update time
-      lastUpdated: '2026-03-19T12:30:00+02:00',
-
-      // Individual service statuses
-      services: [
-        { name: 'Web Application',    status: 'operational' },
-        { name: 'API',                status: 'operational' },
-        { name: 'Database',           status: 'operational' },
-        { name: 'File Storage',       status: 'operational' },
-        { name: 'Push Notifications', status: 'operational' },
-        { name: 'Email Delivery',     status: 'operational' },
+      source: 'static-fallback',
+      stale_after_seconds: 3600,
+      watchpoints: [
+        { key: 'core_web', label: 'Core Web', status: 'operational', group: 'product', message: 'Operational' },
+        { key: 'api', label: 'API', status: 'operational', group: 'product', message: 'Operational' },
+        { key: 'auth', label: 'Auth', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'payments', label: 'Payments', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'chat', label: 'Chat', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'file_uploads', label: 'File Uploads', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'inventory', label: 'Inventory', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'tickets', label: 'Tickets', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'forms', label: 'Forms', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'projects', label: 'Projects', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'leads', label: 'Leads', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'calendar', label: 'Calendar', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'reports', label: 'Reports', status: 'unknown', group: 'product', message: 'Not currently monitored' },
+        { key: 'notifications', label: 'Notifications', status: 'unknown', group: 'product', message: 'Not currently monitored' },
       ],
-
-      // Incident history (newest first)
       incidents: [
         {
-          title: 'Production Outage — Xneelo Cache/Ingress Failure',
-          status: 'resolved',  // 'investigating' | 'identified' | 'monitoring' | 'resolved'
+          title: 'Production outage - upstream ingress failure',
+          status: 'resolved',
+          started_at: '2026-03-19T11:24:00+02:00',
+          resolved_at: '2026-03-19T13:00:00+02:00',
           updates: [
-            {
-              time: '2026-03-19T13:00:00+02:00',
-              label: 'Resolved',
-              text: 'Xneelo has restored their cache/ingress service. All Pulse services are fully operational. No data was lost or compromised.',
-            },
-            {
-              time: '2026-03-19T12:20:00+02:00',
-              label: 'Identified',
-              text: 'Xneelo support confirmed the issue is with their cache/ingress proxy (limited release product). Their engineers are working on it as a matter of urgency.',
-            },
-            {
-              time: '2026-03-19T12:06:00+02:00',
-              label: 'Update',
-              text: 'Xneelo status page confirms: "Cache services are currently degraded, causing downtime for affected websites."',
-            },
-            {
-              time: '2026-03-19T11:50:00+02:00',
-              label: 'Investigating',
-              text: 'Production site unreachable. TLS handshake failing at Xneelo ingress proxy (160.115.0.2). Application server confirmed healthy via direct connection. Staging environment unaffected.',
-            },
-            {
-              time: '2026-03-19T11:24:00+02:00',
-              label: 'Detected',
-              text: 'Users unable to access usepulseapp.com. All API requests returning ERR_CONNECTION_CLOSED.',
-            },
+            { time: '2026-03-19T13:00:00+02:00', label: 'Resolved', text: 'Upstream ingress service was restored and Pulse returned to normal operation.' },
+            { time: '2026-03-19T11:24:00+02:00', label: 'Detected', text: 'Users were unable to access the production site. No Pulse data was lost.' },
           ],
         },
       ],
+      external_checks: [],
     };
 
-    // ── Rendering ──────────────────────────────────────────────────
-    const STATUS_CONFIG = {
-      operational:  { icon: '✓', title: 'All Systems Operational',   subtitle: 'Everything is running smoothly', dotClass: 'green', label: 'Operational' },
-      degraded:     { icon: '⚠', title: 'Degraded Performance',     subtitle: 'Some services may be slower than usual', dotClass: 'amber', label: 'Degraded' },
-      outage:       { icon: '✕', title: 'Major Outage',             subtitle: 'We\'re aware and working on it', dotClass: 'red', label: 'Down' },
-      maintenance:  { icon: '⚙', title: 'Scheduled Maintenance',    subtitle: 'We\'ll be back shortly', dotClass: 'blue', label: 'Maintenance' },
-    };
+    let currentStatus = normalizeStatus(FALLBACK_STATUS, 'static-fallback');
 
-    function render() {
-      const data = STATUS_DATA;
-      const cfg = STATUS_CONFIG[data.overall] || STATUS_CONFIG.operational;
+    document.getElementById('refresh-button').addEventListener('click', () => refreshStatus(true));
+    document.querySelectorAll('.tab').forEach((button) => {
+      button.addEventListener('click', () => activateTab(button.dataset.tab));
+    });
 
-      // Banner
-      const banner = document.getElementById('status-banner');
-      banner.className = `status-banner ${data.overall}`;
-      document.getElementById('status-icon').textContent = cfg.icon;
-      document.getElementById('status-title').textContent = data.overrideMessage || cfg.title;
-      document.getElementById('status-subtitle').textContent = cfg.subtitle;
+    refreshStatus(false);
+    window.setInterval(() => refreshStatus(false), CONFIG.refreshMs);
 
-      // Services
-      const serviceList = document.getElementById('service-list');
-      serviceList.innerHTML = data.services.map(s => {
-        const sc = STATUS_CONFIG[s.status] || STATUS_CONFIG.operational;
-        return `
-          <div class="service-item">
-            <span class="service-name">${s.name}</span>
-            <span class="service-status">
-              <span class="status-text ${sc.dotClass}">${sc.label}</span>
-              <span class="dot ${sc.dotClass}"></span>
-            </span>
-          </div>
-        `;
-      }).join('');
-
-      // Incidents
-      const container = document.getElementById('incidents-container');
-      if (!data.incidents || data.incidents.length === 0) {
-        container.innerHTML = '<div class="no-incidents">No incidents reported in the last 30 days 🎉</div>';
-      } else {
-        container.innerHTML = data.incidents.map(inc => `
-          <div class="incident-card">
-            <div class="incident-header">
-              <span class="incident-title">${inc.title}</span>
-              <span class="incident-badge ${inc.status}">${inc.status}</span>
-            </div>
-            <ul class="incident-updates">
-              ${inc.updates.map(u => `
-                <li class="incident-update">
-                  <div class="incident-update-time">${formatTime(u.time)}</div>
-                  <div class="incident-update-label">${u.label}</div>
-                  <div class="incident-update-text">${u.text}</div>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `).join('');
-      }
-
-      // Last updated
-      document.getElementById('last-updated').textContent =
-        `Last updated: ${formatTime(data.lastUpdated)}`;
-
-      // Year
-      document.getElementById('year').textContent = new Date().getFullYear();
-    }
-
-    function formatTime(iso) {
-      try {
-        const d = new Date(iso);
-        return d.toLocaleString('en-ZA', {
-          year: 'numeric', month: 'short', day: 'numeric',
-          hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-        });
-      } catch { return iso; }
-    }
-
-    // ── Health Check (shared by manual & auto) ────────────────────
-    async function checkHealth() {
-      const start = Date.now();
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), CONFIG.checkTimeout);
-
-        const response = await fetch(CONFIG.healthEndpoint, {
-          method: 'GET',
-          signal: controller.signal,
-          mode: 'cors',
-          cache: 'no-store',
-        });
-
-        clearTimeout(timeout);
-        const elapsed = Date.now() - start;
-
-        if (response.ok) {
-          const data = await response.json();
-          const phpVer = data?.services?.php || data?.php || null;
-          return { ok: true, status: elapsed > CONFIG.degradedThreshold ? 'slow' : 'up', latency: elapsed, php: phpVer, httpStatus: response.status };
-        } else {
-          return { ok: false, status: 'slow', latency: elapsed, php: null, httpStatus: response.status };
-        }
-      } catch (e) {
-        const elapsed = Date.now() - start;
-        return { ok: false, status: 'down', latency: elapsed, php: null, error: e.name === 'AbortError' ? 'timeout' : e.message };
-      }
-    }
-
-    // ── Manual Live Check ──────────────────────────────────────────
-    async function runLiveCheck() {
-      const btn = document.getElementById('check-btn');
-      const result = document.getElementById('check-result');
-      btn.disabled = true;
-      btn.textContent = '↻ Checking…';
-      result.textContent = '';
-
-      const r = await checkHealth();
-
-      if (r.ok && r.status === 'up') {
-        result.innerHTML = `<span style="color: var(--pulse-green)">✓ API responding</span> · ${r.latency}ms${r.php ? ' · PHP ' + r.php : ''}`;
-      } else if (r.ok && r.status === 'slow') {
-        result.innerHTML = `<span style="color: var(--amber)">⚠ API slow</span> · ${r.latency}ms${r.php ? ' · PHP ' + r.php : ''}`;
-      } else if (r.httpStatus) {
-        result.innerHTML = `<span style="color: var(--amber)">⚠ API returned ${r.httpStatus}</span> · ${r.latency}ms`;
-      } else if (r.error === 'timeout') {
-        result.innerHTML = `<span style="color: var(--red)">✕ Request timed out</span> · ${r.latency}ms`;
-      } else {
-        result.innerHTML = `<span style="color: var(--red)">✕ Cannot reach API</span> · ${r.error}`;
-      }
-
-      // Also update live state
-      updateLiveState(r);
-
-      btn.disabled = false;
-      btn.textContent = '↻ Run Live Check';
-
-      // Reset auto-poll countdown
-      startCountdown();
-    }
-
-    // ── Auto-Poll Logic ────────────────────────────────────────────
-    function updateLiveState(r) {
-      liveState.lastCheck = new Date();
-      liveState.latency = r.latency;
-      liveState.phpVersion = r.php || liveState.phpVersion;
-
-      if (r.ok && r.status === 'up') {
-        liveState.status = 'up';
-        liveState.consecutiveFailures = 0;
-      } else if (r.status === 'slow') {
-        liveState.status = 'slow';
-        liveState.consecutiveFailures = 0;
-      } else {
-        liveState.consecutiveFailures++;
-        liveState.status = 'down';
-      }
-
-      applyLiveOverrides();
-      updatePollUI();
-    }
-
-    function applyLiveOverrides() {
-      // If STATUS_DATA says maintenance, don't override — manual takes priority
-      if (STATUS_DATA.overall === 'maintenance') return;
-
-      const banner = document.getElementById('status-banner');
-      const titleEl = document.getElementById('status-title');
-      const subtitleEl = document.getElementById('status-subtitle');
-      const iconEl = document.getElementById('status-icon');
-
-      // Determine effective status from live + manual data
-      let effective;
-      if (liveState.status === 'down' && liveState.consecutiveFailures >= 2) {
-        effective = 'outage';
-      } else if (liveState.status === 'slow') {
-        effective = 'degraded';
-      } else if (liveState.status === 'up') {
-        // If manual says outage but API is up, show operational
-        effective = STATUS_DATA.overall === 'outage' ? 'operational' : STATUS_DATA.overall;
-      } else {
-        effective = STATUS_DATA.overall;
-      }
-
-      const cfg = STATUS_CONFIG[effective] || STATUS_CONFIG.operational;
-      banner.className = `status-banner ${effective}`;
-      iconEl.textContent = cfg.icon;
-      titleEl.textContent = STATUS_DATA.overrideMessage || cfg.title;
-      subtitleEl.textContent = cfg.subtitle;
-
-      // Update Web Application & API service rows based on live state
-      const serviceMap = { up: 'operational', slow: 'degraded', down: 'outage' };
-      const liveServiceStatus = serviceMap[liveState.status] || 'operational';
-      const rows = document.querySelectorAll('.service-item');
-      rows.forEach(row => {
-        const name = row.querySelector('.service-name')?.textContent;
-        if (name === 'Web Application' || name === 'API') {
-          const sc = STATUS_CONFIG[liveServiceStatus];
-          const statusEl = row.querySelector('.service-status');
-          statusEl.innerHTML = `
-            <span class="status-text ${sc.dotClass}">${sc.label}</span>
-            <span class="dot ${sc.dotClass}"></span>
-          `;
-        }
+    function activateTab(tab) {
+      document.querySelectorAll('.tab').forEach((button) => {
+        button.setAttribute('aria-selected', String(button.dataset.tab === tab));
+      });
+      document.querySelectorAll('.tab-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === `panel-${tab}`);
       });
     }
 
-    function updatePollUI() {
-      const liveDot = document.getElementById('live-dot');
-      const pollStatus = document.getElementById('poll-status');
-
-      if (liveState.status === 'up') {
-        liveDot.className = 'live-dot';
-        pollStatus.innerHTML = `Live · ${liveState.latency}ms · <span id="countdown"></span>`;
-      } else if (liveState.status === 'slow') {
-        liveDot.className = 'live-dot checking';
-        pollStatus.innerHTML = `Slow (${liveState.latency}ms) · <span id="countdown"></span>`;
-      } else if (liveState.status === 'down') {
-        liveDot.className = 'live-dot down';
-        pollStatus.innerHTML = `Unreachable · ${liveState.consecutiveFailures} consecutive failure${liveState.consecutiveFailures > 1 ? 's' : ''} · <span id="countdown"></span>`;
+    async function refreshStatus(manual) {
+      const button = document.getElementById('refresh-button');
+      if (manual) {
+        button.disabled = true;
+        button.textContent = 'Refreshing';
+      }
+      try {
+        currentStatus = await loadStatus();
+      } finally {
+        render(currentStatus);
+        button.disabled = false;
+        button.textContent = 'Refresh';
       }
     }
 
-    async function autoPoll() {
-      const liveDot = document.getElementById('live-dot');
-      liveDot.className = 'live-dot checking';
+    async function loadStatus() {
+      let staleCandidate = null;
+      const primary = await fetchJson(CONFIG.publicStatusEndpoint, 'vps-public-status');
+      if (primary) {
+        const normalized = normalizeStatus(primary.data, primary.source);
+        if (!isStale(normalized)) return normalized;
+        staleCandidate = normalized;
+      }
 
-      const r = await checkHealth();
-      updateLiveState(r);
-      startCountdown();
+      const fallback = await fetchJson(`${CONFIG.sameOriginFallback}?t=${Date.now()}`, 'pi-status-json');
+      if (fallback) {
+        const normalized = normalizeStatus(fallback.data, fallback.source);
+        if (!isStale(normalized)) return normalized;
+        staleCandidate = staleCandidate || normalized;
+      }
+
+      const live = await liveHealthFallback();
+      const liveStatus = normalizeStatus(live, 'browser-health-check');
+      return isStale(liveStatus) && staleCandidate ? staleCandidate : liveStatus;
     }
 
-    function startCountdown() {
-      clearInterval(countdownTimer);
-      clearTimeout(pollTimer);
-
-      let remaining = Math.round(CONFIG.pollInterval / 1000);
-      const cdEl = () => document.getElementById('countdown');
-
-      if (cdEl()) cdEl().textContent = `next check in ${remaining}s`;
-
-      countdownTimer = setInterval(() => {
-        remaining--;
-        if (cdEl()) cdEl().textContent = `next check in ${remaining}s`;
-        if (remaining <= 0) clearInterval(countdownTimer);
-      }, 1000);
-
-      pollTimer = setTimeout(autoPoll, CONFIG.pollInterval);
+    async function fetchJson(url, source) {
+      try {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), CONFIG.timeoutMs);
+        const response = await fetch(url, { cache: 'no-store', mode: 'cors', signal: controller.signal });
+        window.clearTimeout(timeout);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return { data, source };
+      } catch (error) {
+        return null;
+      }
     }
 
-    // ── Init ───────────────────────────────────────────────────────
-    render();
+    async function liveHealthFallback() {
+      const started = Date.now();
+      const generatedAt = new Date().toISOString();
+      try {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), CONFIG.timeoutMs);
+        const response = await fetch(CONFIG.healthEndpoint, { cache: 'no-store', mode: 'cors', signal: controller.signal });
+        window.clearTimeout(timeout);
+        const latency = Date.now() - started;
+        const status = response.ok ? (latency > CONFIG.slowMs ? 'degraded' : 'operational') : 'degraded';
+        return {
+          version: 1,
+          generated_at: generatedAt,
+          overall: status,
+          source: 'browser-health-check',
+          stale_after_seconds: 120,
+          watchpoints: [{ key: 'api', label: 'API', status, group: 'product', latency_ms: latency, checked_at: generatedAt, message: statusLabel(status) }],
+          incidents: FALLBACK_STATUS.incidents,
+          external_checks: [{ key: 'browser_api', label: 'Browser API Check', status, latency_ms: latency, checked_at: generatedAt }],
+        };
+      } catch (error) {
+        const latency = Date.now() - started;
+        return {
+          version: 1,
+          generated_at: generatedAt,
+          overall: 'unknown',
+          source: 'browser-health-check',
+          stale_after_seconds: 120,
+          watchpoints: [{ key: 'api', label: 'API', status: 'unknown', group: 'product', latency_ms: latency, checked_at: generatedAt, message: 'Not reachable from this browser' }],
+          incidents: FALLBACK_STATUS.incidents,
+          external_checks: [{ key: 'browser_api', label: 'Browser API Check', status: 'unknown', latency_ms: latency, checked_at: generatedAt }],
+        };
+      }
+    }
 
-    // Start auto-polling immediately on load
-    (async () => {
-      await autoPoll();
-    })();
+    function normalizeStatus(input, source) {
+      const data = input && typeof input === 'object' ? input : FALLBACK_STATUS;
+      return {
+        version: Number(data.version || 1),
+        generated_at: validTime(data.generated_at) || new Date().toISOString(),
+        overall: normalizeState(data.overall),
+        source: String(data.source || source || 'unknown'),
+        stale_after_seconds: Number(data.stale_after_seconds || 300),
+        watchpoints: normalizeWatchpoints(data.watchpoints),
+        incidents: normalizeIncidents(data.incidents),
+        external_checks: normalizeExternal(data.external_checks),
+        loaded_from: source || String(data.source || 'unknown'),
+      };
+    }
+
+    function normalizeWatchpoints(items) {
+      const list = Array.isArray(items) ? items : [];
+      return list.map((item) => ({
+        key: String(item.key || item.name || item.label || 'watchpoint').slice(0, 80),
+        label: String(item.label || item.name || 'Pulse').slice(0, 80),
+        status: normalizeState(item.status),
+        group: String(item.group || 'product').slice(0, 40),
+        checked_at: validTime(item.checked_at || item.updated_at) || null,
+        latency_ms: Number.isFinite(Number(item.latency_ms)) ? Number(item.latency_ms) : null,
+        message: String(item.message || statusLabel(normalizeState(item.status))).slice(0, 160),
+      }));
+    }
+
+    function normalizeExternal(items) {
+      const list = Array.isArray(items) ? items : [];
+      return list.map((item) => ({
+        key: String(item.key || item.name || item.label || 'external').slice(0, 80),
+        label: String(item.label || item.name || 'External Check').slice(0, 80),
+        status: normalizeState(item.status),
+        checked_at: validTime(item.checked_at || item.updated_at) || null,
+        latency_ms: Number.isFinite(Number(item.latency_ms)) ? Number(item.latency_ms) : null,
+        message: String(item.message || statusLabel(normalizeState(item.status))).slice(0, 160),
+      }));
+    }
+
+    function normalizeIncidents(items) {
+      const list = Array.isArray(items) ? items : [];
+      return list.map((item) => ({
+        title: String(item.title || 'Incident update').slice(0, 120),
+        status: String(item.status || 'unknown').slice(0, 40),
+        started_at: validTime(item.started_at) || null,
+        resolved_at: validTime(item.resolved_at) || null,
+        updated_at: validTime(item.updated_at) || null,
+        updates: Array.isArray(item.updates) ? item.updates.map((update) => ({
+          time: validTime(update.time) || null,
+          label: String(update.label || 'Update').slice(0, 60),
+          text: String(update.text || '').slice(0, 500),
+        })) : [],
+      }));
+    }
+
+    function render(data) {
+      const meta = STATUS_META[data.overall] || STATUS_META.unknown;
+      const counts = countStatuses(data.watchpoints);
+      const stale = isStale(data);
+
+      const mark = document.getElementById('status-mark');
+      mark.className = `status-mark ${data.overall}`;
+      mark.textContent = meta.mark;
+      document.getElementById('status-title').textContent = stale ? 'Status Snapshot Stale' : meta.title;
+      document.getElementById('status-copy').textContent = stale ? 'The latest monitoring data is older than expected.' : meta.copy;
+      document.getElementById('generated-at').textContent = formatTime(data.generated_at);
+      document.getElementById('freshness').textContent = stale ? 'Stale' : 'Fresh';
+      document.getElementById('watchpoint-count').textContent = String(data.watchpoints.length);
+      document.getElementById('source-pill').textContent = `Source: ${data.loaded_from || data.source}`;
+      document.getElementById('count-operational').textContent = String(counts.operational);
+      document.getElementById('count-attention').textContent = String(counts.degraded + counts.outage + counts.maintenance);
+      document.getElementById('count-unknown').textContent = String(counts.unknown);
+      document.getElementById('count-external').textContent = String(data.external_checks.length);
+
+      document.getElementById('overview-grid').replaceChildren(...data.watchpoints.slice(0, 6).map(watchpointCard));
+      renderOverviewIncidents(data.incidents);
+      document.getElementById('watchpoints-grid').replaceChildren(...data.watchpoints.map(watchpointCard));
+      renderIncidents(data.incidents);
+      renderExternal(data.external_checks);
+    }
+
+    function renderOverviewIncidents(incidents) {
+      const target = document.getElementById('overview-incidents');
+      const recent = incidents[0];
+      target.replaceChildren(recent ? incidentCard(recent) : emptyNode('No recent incidents.'));
+    }
+
+    function renderIncidents(incidents) {
+      const target = document.getElementById('incidents-list');
+      if (!incidents.length) {
+        target.replaceChildren(emptyNode('No recent incidents.'));
+        return;
+      }
+      target.replaceChildren(...incidents.map(incidentCard));
+    }
+
+    function renderExternal(checks) {
+      const target = document.getElementById('external-grid');
+      if (!checks.length) {
+        target.replaceChildren(emptyNode('External checker data is not available yet.'));
+        return;
+      }
+      target.replaceChildren(...checks.map(watchpointCard));
+    }
+
+    function watchpointCard(item) {
+      const card = element('article', 'card');
+      const head = element('div', 'card-title');
+      head.append(element('div', 'name', item.label), badge(item.status));
+      const meta = element('div', 'card-meta');
+      meta.append(
+        element('span', '', item.message || statusLabel(item.status)),
+        element('span', '', item.latency_ms !== null ? `${Math.round(item.latency_ms)} ms` : 'Latency --'),
+        element('span', '', item.checked_at ? formatTime(item.checked_at) : 'Checked --')
+      );
+      card.append(head, meta);
+      return card;
+    }
+
+    function incidentCard(incident) {
+      const card = element('article', 'incident');
+      const head = element('div', 'incident-head');
+      const titleWrap = element('div');
+      titleWrap.append(element('div', 'incident-title', incident.title), element('div', 'incident-time', incidentTime(incident)));
+      head.append(titleWrap, badge(incident.status));
+      const updates = element('div', 'updates');
+      incident.updates.forEach((update) => {
+        const row = element('div');
+        row.append(
+          element('div', 'update-label', update.label),
+          element('div', 'incident-time', update.time ? formatTime(update.time) : ''),
+          element('div', 'update-text', update.text)
+        );
+        updates.append(row);
+      });
+      card.append(head, updates);
+      return card;
+    }
+
+    function emptyNode(text) {
+      return element('div', 'empty', text);
+    }
+
+    function badge(status) {
+      return element('span', `badge ${normalizeState(status)}`, statusLabel(status));
+    }
+
+    function element(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function countStatuses(items) {
+      return items.reduce((acc, item) => {
+        acc[item.status] = (acc[item.status] || 0) + 1;
+        return acc;
+      }, { operational: 0, degraded: 0, outage: 0, maintenance: 0, unknown: 0 });
+    }
+
+    function normalizeState(status) {
+      const value = String(status || '').toLowerCase();
+      return ['operational', 'degraded', 'outage', 'maintenance', 'unknown', 'resolved', 'investigating', 'identified', 'monitoring'].includes(value)
+        ? value
+        : 'unknown';
+    }
+
+    function statusLabel(status) {
+      const value = normalizeState(status);
+      if (value === 'operational') return 'Operational';
+      if (value === 'degraded') return 'Degraded';
+      if (value === 'outage') return 'Outage';
+      if (value === 'maintenance') return 'Maintenance';
+      if (value === 'resolved') return 'Resolved';
+      if (value === 'investigating') return 'Investigating';
+      if (value === 'identified') return 'Identified';
+      if (value === 'monitoring') return 'Monitoring';
+      return 'Unknown';
+    }
+
+    function validTime(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date.toISOString();
+    }
+
+    function formatTime(value) {
+      if (!value) return '--';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '--';
+      return date.toLocaleString('en-ZA', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    function incidentTime(incident) {
+      if (incident.resolved_at) return `Resolved ${formatTime(incident.resolved_at)}`;
+      if (incident.updated_at) return `Updated ${formatTime(incident.updated_at)}`;
+      if (incident.started_at) return `Started ${formatTime(incident.started_at)}`;
+      return 'Timeline unavailable';
+    }
+
+    function isStale(data) {
+      const generated = new Date(data.generated_at).getTime();
+      if (!Number.isFinite(generated)) return true;
+      const staleAfterMs = Math.max(60, Number(data.stale_after_seconds || 300)) * 1000;
+      return Date.now() - generated > staleAfterMs;
+    }
   </script>
 </body>
 </html>

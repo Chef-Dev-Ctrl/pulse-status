@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-08T00:00:00+00:00",
+  "overall": "unknown",
+  "source": "status-page-seed",
+  "stale_after_seconds": 60,
+  "watchpoints": [
+    {
+      "key": "core_web",
+      "label": "Core Web",
+      "status": "unknown",
+      "group": "product",
+      "message": "Awaiting monitor data"
+    },
+    {
+      "key": "api",
+      "label": "API",
+      "status": "unknown",
+      "group": "product",
+      "message": "Awaiting monitor data"
+    }
+  ],
+  "incidents": [],
+  "external_checks": [
+    {
+      "key": "pi_checker",
+      "label": "External Checker",
+      "status": "unknown",
+      "message": "Awaiting Pi heartbeat"
+    }
+  ]
+}
