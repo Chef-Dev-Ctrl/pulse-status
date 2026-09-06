@@ -1,75 +1,73 @@
 {
   "external_checks": [
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
-      "content_type": "text/html",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "key": "public_web",
       "label": "Public Web",
-      "latency_ms": 7104,
-      "message": "HTTP 200",
-      "status": "degraded"
+      "message": "URLError",
+      "status": "outage"
     },
     {
-      "checked_at": "2026-09-06T14:35:09+00:00",
+      "checked_at": "2026-09-06T14:40:15+00:00",
       "content_type": "application/json",
       "key": "api_health",
       "label": "API Health",
-      "latency_ms": 782,
+      "latency_ms": 1387,
       "message": "HTTP 200",
       "status": "operational"
     },
     {
-      "checked_at": "2026-09-06T14:35:10+00:00",
+      "checked_at": "2026-09-06T14:40:16+00:00",
       "content_type": "text/html",
       "key": "status_page",
       "label": "Status Page",
-      "latency_ms": 6387,
+      "latency_ms": 1693,
       "message": "HTTP 200",
-      "status": "degraded"
+      "status": "operational"
     },
     {
-      "checked_at": "2026-09-06T14:35:20+00:00",
+      "checked_at": "2026-09-06T14:40:19+00:00",
       "key": "tls_usepulseapp",
       "label": "TLS usepulseapp.com",
-      "latency_ms": 4800,
+      "latency_ms": 2359,
       "message": "Expires in 43 days",
       "status": "operational"
     },
     {
-      "checked_at": "2026-09-06T14:35:25+00:00",
+      "checked_at": "2026-09-06T14:40:21+00:00",
       "key": "tls_status_page",
       "label": "TLS status.usepulseapp.com",
-      "latency_ms": 1859,
+      "latency_ms": 1238,
       "message": "Expires in 39 days",
       "status": "operational"
     },
     {
-      "checked_at": "2026-09-06T14:35:16+00:00",
+      "checked_at": "2026-09-06T14:40:18+00:00",
       "content_type": "application/json",
       "key": "public_status_json",
       "label": "Public Status JSON",
-      "latency_ms": 3724,
+      "latency_ms": 717,
       "message": "HTTP 200",
       "status": "operational"
     }
   ],
-  "generated_at": "2026-09-06T14:35:02+00:00",
+  "generated_at": "2026-09-06T14:40:02+00:00",
   "incidents": [],
-  "overall": "degraded",
+  "overall": "outage",
   "source": "goblin-king-pi",
   "stale_after_seconds": 2100,
   "version": 1,
   "watchpoints": [
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "core_web",
       "label": "Core Web",
       "message": "External probe",
-      "status": "degraded"
+      "status": "outage"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "api",
       "label": "API",
@@ -77,7 +75,7 @@
       "status": "operational"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "auth",
       "label": "Auth",
@@ -85,7 +83,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "payments",
       "label": "Payments",
@@ -93,7 +91,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "chat",
       "label": "Chat",
@@ -101,7 +99,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "file_uploads",
       "label": "File Uploads",
@@ -109,7 +107,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "inventory",
       "label": "Inventory",
@@ -117,7 +115,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "tickets",
       "label": "Tickets",
@@ -125,7 +123,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "forms",
       "label": "Forms",
@@ -133,7 +131,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "projects",
       "label": "Projects",
@@ -141,7 +139,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "leads",
       "label": "Leads",
@@ -149,7 +147,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "calendar",
       "label": "Calendar",
@@ -157,7 +155,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "reports",
       "label": "Reports",
@@ -165,7 +163,7 @@
       "status": "unknown"
     },
     {
-      "checked_at": "2026-09-06T14:35:02+00:00",
+      "checked_at": "2026-09-06T14:40:02+00:00",
       "group": "product",
       "key": "notifications",
       "label": "Notifications",
